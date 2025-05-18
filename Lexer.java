@@ -23,6 +23,7 @@ public class Lexer {
             this.line = line;
         }
 
+        @Override
         public String toString() {
             return String.format("Token(%s, '%s', line %d)", type, value, line);
         }
@@ -93,20 +94,6 @@ public class Lexer {
             lineNum++;
         }
         return tokens;
-    }
-
-    // Para pruebas
-    public static void main(String[] args) {
-        String codigo = String.join("\n",
-            "let a = 7;",
-            "let b = 5;",
-            "let suma = a + b;",
-            "print(\"La suma es: \", suma);"
-        );
-        List<Token> tokens = tokenize(codigo);
-        for (Token t : tokens) {
-            System.out.println(t);
-        }
     }
 }
 
