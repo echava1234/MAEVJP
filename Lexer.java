@@ -2,12 +2,6 @@
 // FASE 1: Análisis Léxico (Lexer)
 // =============================================================================
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.*;
 import java.util.regex.*;
 
@@ -40,8 +34,8 @@ public class Lexer {
     }
 
     private static final List<TokenPattern> tokenPatterns = Arrays.asList(
-        new TokenPattern("[ \\t]+",                  null),        // espacios/tabs, se ignoran
-        new TokenPattern("//.*",                    null),        // comentarios de línea, se ignoran
+        new TokenPattern("[ \\t]+",                  null),        // Espacios/tabs, se ignoran
+        new TokenPattern("//.*",                    null),        // Comentarios de línea, se ignoran
         new TokenPattern("let\\b",                  "LET"),
         new TokenPattern("print\\b",                "PRINT"),
         new TokenPattern("if\\b",                   "IF"),
