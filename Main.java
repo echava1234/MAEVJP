@@ -1,6 +1,6 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class Main {
@@ -10,36 +10,26 @@ public class Main {
             return;
         }
 
-        String fileName = args[0];
+        String filename = args[0];
         String sourceCode = "";
+
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(fileName));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sourceCode += line + "\n";
-            }
-            reader.close();
-        } catch (IOException e) {
-            System.err.println("Error al leer el archivo: " + e.getMessage());
+            sourceCode = new String(Files.readAllBytes(Paths.get(filename)));
+        } catch (Exception e) {
+            System.out.println("Error al leer el archivo: " + filename + " (" + e.getMessage() + ")");
             return;
         }
 
-        Lexer lexer = new Lexer(sourceCode);
-        List<Token> tokens = lexer.tokenize();
+        try {
+            Lexer lexer = new Lexer(sourceCode);
+            List<Token> tokens = lexer.tokenize();
+            // Puedes descomentar para depuración:
+            // for (Token t : tokens) System.out.println(t);
 
-        Parser parser = new Parser(tokens);
-        Program program = parser.parse();
-
-        SemanticAnalyzer analyzer = new SemanticAnalyzer();
-        boolean isValid = analyzer.analyze(program);
-
-        if (isValid) {
-            System.out.println("El programa es semánticamente correcto.");
-        } else {
-            System.out.println("Se han encontrado errores semánticos:");
-            for (String error : analyzer.getErrors()) {
-                System.out.println(error);
-            }
+            Parser parser = new Parser(tokens);
+            parser.parse();
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }
