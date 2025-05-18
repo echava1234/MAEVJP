@@ -56,14 +56,14 @@ public class Parser {
 
     private void parseLetStatement() {
         consume("LET");
-        Token id = consume("IDENTIFIER");
+        consume("IDENTIFIER");
         consume("ASSIGN");
         parseExpression();
         consume("SEMICOLON");
     }
 
     private void parseAssignmentStatement() {
-        Token id = consume("IDENTIFIER");
+        consume("IDENTIFIER");
         consume("ASSIGN");
         parseExpression();
         consume("SEMICOLON");
