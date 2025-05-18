@@ -1,18 +1,9 @@
-let a = 1;
-let b = 2;
-let c = 3;
-let resultado = 0;
+let x = 0;
+let y = 5;
 
-while (a < 10) {
-    resultado = resultado + a * b;
-    a = a + c;
-    print(resultado, a, b, c);
+while (x < y {
+    print(x);
+    x = x + 1;
 }
 
-d = resultado + 1; // ERROR: ‘d’ no fue declarada con let
-
-if (d > 20) {
-    print("Mayor que 20");
-} else {
-    print("Menor o igual a 20");
-}
+print("Fin del programa");
