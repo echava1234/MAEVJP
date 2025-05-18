@@ -1,0 +1,7 @@
+let a = 10;
+let b = 5;
+
+print(a, b, ); // ERROR: coma extra al final de la lista de argumentos
+
+a = a + b;
+print(a);
