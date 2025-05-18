@@ -3,146 +3,143 @@
 // =============================================================================
 
 
-// Clase para representar un error semántico
-class SemanticError extends RuntimeException {
-    public SemanticError(String message) {
-        super(message);
-    }
-}
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-// Clase para el analizador semántico
 class SemanticAnalyzer {
-    private Map<String, String> environment; // Tabla de símbolos para almacenar variables y sus tipos
+    private Map<String, String> symbol_table;
+    private List<String> errors;
 
     public SemanticAnalyzer() {
-        this.environment = new HashMap<>();
+        this.symbol_table = new HashMap<>();
+        this.errors = new ArrayList<>();
     }
 
-    // Realiza el análisis semántico del AST
-    public void analyze(Program program) {
-        for (ASTNode statement : program.statements) {
-            analyzeStatement(statement);
-        }
+    public boolean analyze(ASTNode ast) {
+        visit_node(ast);
+        return errors.isEmpty();
     }
 
-    // Analiza una sentencia del AST
-    private void analyzeStatement(ASTNode node) {
-        if (node instanceof Assignment) {
-            analyzeAssignment((Assignment) node);
-        } else if (node instanceof Print) {
-            analyzePrint((Print) node);
-        } else if (node instanceof IfStatement) {
-            analyzeIfStatement((IfStatement) node);
-        } else if (node instanceof WhileStatement) {
-            analyzeWhileStatement((WhileStatement) node);
+    public List<String> getErrors() {
+        return errors;
+    }
+
+    private String visit_node(ASTNode node) {
+        if (node instanceof Program) {
+            return visit_Program((Program) node);
         } else if (node instanceof BinaryOperation) {
-            analyzeBinaryOperation((BinaryOperation) node);
-        } else if (node instanceof Comparison) {
-            analyzeComparison((Comparison) node);
+            return visit_BinaryOperation((BinaryOperation) node);
+        } else if (node instanceof Number) {
+            return visit_Number((Number) node);
         } else if (node instanceof Identifier) {
-            analyzeIdentifier((Identifier) node);
-        } else if (node instanceof Number || node instanceof StringLiteral) {
-            // Los literales no requieren análisis semántico adicional en este nivel
+            return visit_Identifier((Identifier) node);
+        } else if (node instanceof Assignment) {
+            return visit_Assignment((Assignment) node);
+        } else if (node instanceof Print) {
+            return visit_Print((Print) node);
+        } else if (node instanceof IfStatement) {
+            return visit_IfStatement((IfStatement) node);
+        } else if (node instanceof WhileStatement) {
+            return visit_WhileStatement((WhileStatement) node);
+        } else if (node instanceof Comparison) {
+            return visit_Comparison((Comparison) node);
+        } else if (node instanceof StringLiteral) {
+            return visit_StringLiteral((StringLiteral) node);
         } else {
-            throw new SemanticError("Nodo AST desconocido: " + node.getClass().getName());
+            return generic_visit(node);
         }
     }
 
-    // Analiza una asignación
-    private void analyzeAssignment(Assignment assignment) {
-        String varName = assignment.name;
-        ASTNode valueNode = assignment.value;
-        String valueType = getType(valueNode);
-        environment.put(varName, valueType); // Almacena el tipo de la variable en el entorno
+    private String generic_visit(ASTNode node) {
+        return null;
     }
 
-    // Analiza una sentencia de impresión
-    private void analyzePrint(Print printStatement) {
-        analyzeStatement(printStatement.expression); // Analiza la expresión que se va a imprimir
+    private String visit_Program(Program node) {
+        for (ASTNode statement : node.statements) {
+            visit_node(statement);
+        }
+        return null;
     }
 
-    // Analiza una sentencia if
-    private void analyzeIfStatement(IfStatement ifStatement) {
-        analyzeStatement(ifStatement.condition); // Analiza la condición
-        if (!(getType(ifStatement.condition).equals("BOOLEAN"))) {
-            throw new SemanticError("La condición del 'if' debe ser de tipo booleano.");
+    private String visit_BinaryOperation(BinaryOperation node) {
+        String left_type = visit_node(node.left);
+        String right_type = visit_node(node.right);
+
+        if (!left_type.equals("number") || !right_type.equals("number")) {
+            errors.add("Error semántico: Operación aritmética con valores no numéricos");
         }
-        for (ASTNode statement : ifStatement.ifBlock) {
-            analyzeStatement(statement); // Analiza las sentencias del bloque if
+        return "number";
+    }
+
+    private String visit_Number(Number node) {
+        return "number";
+    }
+
+    private String visit_StringLiteral(StringLiteral node) {
+        return "string";
+    }
+
+    private String visit_Identifier(Identifier node) {
+        if (!symbol_table.containsKey(node.name)) {
+            errors.add("Error semántico: Variable '" + node.name + "' no definida");
+            return "unknown";
         }
-        if (ifStatement.elseBlock != null) {
-            for (ASTNode statement : ifStatement.elseBlock) {
-                analyzeStatement(statement); // Analiza las sentencias del bloque else
+        return symbol_table.get(node.name);
+    }
+
+    private String visit_Assignment(Assignment node) {
+        String value_type = visit_node(node.value);
+        symbol_table.put(node.name, value_type);
+        return null;
+    }
+
+    private String visit_Print(Print node) {
+        visit_node(node.expression);
+        return null;
+    }
+
+    private String visit_IfStatement(IfStatement node) {
+        String condition_type = visit_node(node.condition);
+
+        if (!condition_type.equals("boolean")) {
+            errors.add("Error semántico: La condición del if debe ser una expresión booleana");
+        }
+
+        for (ASTNode statement : node.ifBlock) {
+            visit_node(statement);
+        }
+
+        if (node.elseBlock != null) {
+            for (ASTNode statement : node.elseBlock) {
+                visit_node(statement);
             }
         }
+        return null;
     }
 
-    // Analiza una sentencia while
-    private void analyzeWhileStatement(WhileStatement whileStatement) {
-        analyzeStatement(whileStatement.condition); // Analiza la condición
-        if (!(getType(whileStatement.condition).equals("BOOLEAN"))) {
-            throw new SemanticError("La condición del 'while' debe ser de tipo booleano.");
+    private String visit_WhileStatement(WhileStatement node) {
+        String condition_type = visit_node(node.condition);
+
+        if (!condition_type.equals("boolean")) {
+            errors.add("Error semántico: La condición del while debe ser una expresión booleana");
         }
-        for (ASTNode statement : whileStatement.block) {
-            analyzeStatement(statement); // Analiza las sentencias del bloque while
+
+        for (ASTNode statement : node.block) {
+            visit_node(statement);
         }
+        return null;
     }
 
-    // Analiza una operación binaria
-    private void analyzeBinaryOperation(BinaryOperation binaryOperation) {
-        String leftType = getType(binaryOperation.left);
-        String rightType = getType(binaryOperation.right);
+    private String visit_Comparison(Comparison node) {
+        String left_type = visit_node(node.left);
+        String right_type = visit_node(node.right);
 
-        if (leftType == null || rightType == null) {
-            throw new SemanticError("Uno o ambos operandos de la operación binaria no tienen tipo definido.");
+        if (!left_type.equals(right_type)) {
+            errors.add("Error semántico: Comparación entre tipos diferentes");
         }
-
-        if (!leftType.equals(rightType)) {
-            throw new SemanticError("Los operandos de la operación '" + binaryOperation.operator + "' deben ser del mismo tipo. Se encontraron: " + leftType + " y " + rightType + ".");
-        }
-
-        if (!(leftType.equals("NUMBER"))) {
-            throw new SemanticError("La operación '" + binaryOperation.operator + "' solo se puede aplicar a números. Se encontraron operandos de tipo: " + leftType + ".");
-        }
-    }
-
-    // Analiza una comparación
-    private void analyzeComparison(Comparison comparison) {
-        String leftType = getType(comparison.left);
-        String rightType = getType(comparison.right);
-
-        if (leftType == null || rightType == null) {
-            throw new SemanticError("Uno o ambos operandos de la comparación no tienen tipo definido.");
-        }
-
-        if (!leftType.equals(rightType)) {
-            throw new SemanticError("Los operandos de la comparación '" + comparison.operator + "' deben ser del mismo tipo. Se encontraron: " + leftType + " y " + rightType + ".");
-        }
-
-        // Las comparaciones siempre resultan en un tipo booleano, pero no necesitamos almacenarlo aquí
-    }
-
-    // Analiza un identificador (variable)
-    private void analyzeIdentifier(Identifier identifier) {
-        if (!environment.containsKey(identifier.name)) {
-            throw new SemanticError("Variable '" + identifier.name + "' no declarada.");
-        }
-    }
-
-    // Obtiene el tipo de un nodo AST
-    private String getType(ASTNode node) {
-        if (node instanceof Number) {
-            return "NUMBER";
-        } else if (node instanceof StringLiteral) {
-            return "STRING";
-        } else if (node instanceof Identifier) {
-            return environment.get(((Identifier) node).name);
-        } else if (node instanceof BinaryOperation) {
-            // Suponemos que las operaciones binarias entre números dan como resultado un número
-            return getType(((BinaryOperation) node).left); // El tipo será el mismo que el de los operandos (ya verificado)
-        } else if (node instanceof Comparison) {
-            return "BOOLEAN";
-        }
-        return null; // Tipo desconocido
+        return "boolean";
     }
 }
+
