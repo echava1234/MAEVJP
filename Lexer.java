@@ -8,141 +8,105 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.*;
+import java.util.regex.*;
 
 public class Lexer {
-    private String sourceCode;
-    private List<Token> tokens;
-    private int currentLine;
-    private int currentColumn;
-    private static final Map<String, String> TOKEN_TYPES = new HashMap<>();
+    public static class Token {
+        public String type;
+        public String value;
+        public int line;
 
-    static {
-        TOKEN_TYPES.put("NUMBER", "\\d+(\\.\\d+)?");
-        TOKEN_TYPES.put("PLUS", "\\+");
-        TOKEN_TYPES.put("MINUS", "-");
-        TOKEN_TYPES.put("MULTIPLY", "\\*");
-        TOKEN_TYPES.put("DIVIDE", "/");
-        TOKEN_TYPES.put("LPAREN", "\\(");
-        TOKEN_TYPES.put("RPAREN", "\\)");
-        TOKEN_TYPES.put("ASSIGN", "=");
-        TOKEN_TYPES.put("SEMICOLON", ";");
-        TOKEN_TYPES.put("IDENTIFIER", "[a-zA-Z_][a-zA-Z0-9_]*");
-        TOKEN_TYPES.put("PRINT", "print");
-        TOKEN_TYPES.put("IF", "if");
-        TOKEN_TYPES.put("ELSE", "else");
-        TOKEN_TYPES.put("WHILE", "while");
-        TOKEN_TYPES.put("EQUALS", "==");
-        TOKEN_TYPES.put("LBRACE", "\\{");
-        TOKEN_TYPES.put("RBRACE", "\\}");
-        TOKEN_TYPES.put("GREATER", ">");
-        TOKEN_TYPES.put("LESS", "<");
-        TOKEN_TYPES.put("WHITESPACE", "\\s+");
-        TOKEN_TYPES.put("COMMENT", "//.*");
-        TOKEN_TYPES.put("STRING", "\"[^\"]*\"");
+        public Token(String type, String value, int line) {
+            this.type = type;
+            this.value = value;
+            this.line = line;
+        }
+
+        public String toString() {
+            return String.format("Token(%s, '%s', line %d)", type, value, line);
+        }
     }
 
-    public Lexer(String sourceCode) {
-        this.sourceCode = sourceCode;
-        this.tokens = new ArrayList<>();
-        this.currentLine = 1;
-        this.currentColumn = 1;
+    private static class TokenPattern {
+        public final Pattern pattern;
+        public final String type;
+
+        public TokenPattern(String regex, String type) {
+            this.pattern = Pattern.compile("^" + regex);
+            this.type = type;
+        }
     }
 
-    public List<Token> tokenize() {
-        String remainingCode = sourceCode;
+    private static final List<TokenPattern> tokenPatterns = Arrays.asList(
+        new TokenPattern("[ \\t]+",                  null),        // espacios/tabs, se ignoran
+        new TokenPattern("//.*",                    null),        // comentarios de línea, se ignoran
+        new TokenPattern("let\\b",                  "LET"),
+        new TokenPattern("print\\b",                "PRINT"),
+        new TokenPattern("if\\b",                   "IF"),
+        new TokenPattern("else\\b",                 "ELSE"),
+        new TokenPattern("while\\b",                "WHILE"),
+        new TokenPattern("[a-zA-Z_][a-zA-Z0-9_]*",  "IDENTIFIER"),
+        new TokenPattern("\"(\\\\.|[^\"])*\"",      "STRING"),
+        new TokenPattern("[0-9]+",                  "NUMBER"),
+        new TokenPattern("\\+",                     "PLUS"),
+        new TokenPattern("-",                       "MINUS"),
+        new TokenPattern("\\*",                     "STAR"),
+        new TokenPattern("/",                       "SLASH"),
+        new TokenPattern("=",                       "EQUALS"),
+        new TokenPattern(">=",                      "GE"),
+        new TokenPattern("<=",                      "LE"),
+        new TokenPattern(">",                       "GT"),
+        new TokenPattern("<",                       "LT"),
+        new TokenPattern("\\(",                     "LPAREN"),
+        new TokenPattern("\\)",                     "RPAREN"),
+        new TokenPattern("\\{",                     "LBRACE"),
+        new TokenPattern("\\}",                     "RBRACE"),
+        new TokenPattern(";",                       "SEMICOLON"),
+        new TokenPattern(",",                       "COMMA")
+    );
 
-        while (!remainingCode.isEmpty()) {
-            Matcher match = null;
-            String matchedTokenType = null;
-
-            for (Map.Entry<String, String> entry : TOKEN_TYPES.entrySet()) {
-                String tokenType = entry.getKey();
-                String pattern = entry.getValue();
-                Pattern regex = Pattern.compile("^" + pattern);
-                match = regex.matcher(remainingCode);
-
-                if (match.find()) {
-                    matchedTokenType = tokenType;
-                    break;
-                }
-            }
-
-            if (match != null) {
-                String value = match.group(0);
-
-                if (!matchedTokenType.equals("WHITESPACE") && !matchedTokenType.equals("COMMENT")) {
-                    if (matchedTokenType.equals("IDENTIFIER")) {
-                        if (value.equals("print")) {
-                            matchedTokenType = "PRINT";
-                        } else if (value.equals("if")) {
-                            matchedTokenType = "IF";
-                        } else if (value.equals("else")) {
-                            matchedTokenType = "ELSE";
-                        } else if (value.equals("while")) {
-                            matchedTokenType = "WHILE";
+    public static List<Token> tokenize(String input) {
+        List<Token> tokens = new ArrayList<>();
+        String[] lines = input.split("\\r?\\n");
+        int lineNum = 1;
+        for (String line : lines) {
+            String s = line;
+            while (!s.isEmpty()) {
+                boolean matched = false;
+                for (TokenPattern tp : tokenPatterns) {
+                    Matcher matcher = tp.pattern.matcher(s);
+                    if (matcher.find()) {
+                        String value = matcher.group();
+                        if (tp.type != null) {
+                            tokens.add(new Token(tp.type, value, lineNum));
                         }
-                    }
-                    Token token = new Token(matchedTokenType, value, currentLine, currentColumn);
-                    tokens.add(token);
-                }
-
-                for (char c : value.toCharArray()) {
-                    if (c == '\n') {
-                        currentLine++;
-                        currentColumn = 1;
-                    } else {
-                        currentColumn++;
+                        s = s.substring(value.length());
+                        matched = true;
+                        break;
                     }
                 }
-
-                remainingCode = remainingCode.substring(value.length());
-            } else {
-                char errorChar = remainingCode.charAt(0);
-                throw new IllegalArgumentException("Carácter no reconocido: '" + errorChar + "' en la línea " + currentLine + ", columna " + currentColumn);
+                if (!matched) {
+                    throw new IllegalStateException("Token desconocido en la línea " + lineNum + ": " + s);
+                }
             }
+            lineNum++;
         }
         return tokens;
     }
 
-    public List<Token> getTokens() {
-        return tokens;
-    }
-}
-
-// Token.java
-// Clase para representar un token
-class Token {
-    private String type;
-    private String value;
-    private int line;
-    private int column;
-
-    public Token(String type, String value, int line, int column) {
-        this.type = type;
-        this.value = value;
-        this.line = line;
-        this.column = column;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public int getLine() {
-        return line;
-    }
-
-    public int getColumn() {
-        return column;
-    }
-
-    @Override
-    public String toString() {
-        return "Token(" + type + ", '" + value + "', línea:" + line + ", col:" + column + ")";
+    // Para pruebas
+    public static void main(String[] args) {
+        String codigo = String.join("\n",
+            "let a = 7;",
+            "let b = 5;",
+            "let suma = a + b;",
+            "print(\"La suma es: \", suma);"
+        );
+        List<Token> tokens = tokenize(codigo);
+        for (Token t : tokens) {
+            System.out.println(t);
+        }
     }
 }
 
