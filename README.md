@@ -1,10 +1,10 @@
-# Compilador MiniLang
+# Compilador MAEVJP
 
-Este es un compilador simple para un lenguaje de programación ficticio llamado "MiniLang", desarrollado como proyecto para la clase de Teoría de la Computación. El compilador está implementado en Java.
+Este es un compilador simple para un lenguaje de programación ficticio llamado "MAEVJP", desarrollado como proyecto para la clase de Teoría de la Computación. El compilador está implementado en Java.
 
-## Características del lenguaje MiniLang
+## Características del lenguaje MAEVJP
 
-MiniLang es un lenguaje sencillo que soporta:
+MAEVJPes un lenguaje sencillo que soporta:
 
 * Operaciones aritméticas básicas (+, -, \*, /)
 * Declaración y asignación de variables
@@ -19,8 +19,8 @@ MiniLang es un lenguaje sencillo que soporta:
 El compilador consta de los siguientes componentes principales:
 
 * **Analizador Léxico (Lexer):** Convierte el código fuente en tokens.
-* **Analizador Sintáctico (Parser):** Analiza los tokens y construye un árbol de sintaxis abstracta (AST).
-* **Analizador Semántico (Semantic Analyzer):** Verifica la validez semántica del AST.
+* **Analizador Sintáctico (Parser):** Analiza los tokens y construye.
+* **Analizador Semántico (Semantic Analyzer):** Verifica la validez semántica.
 
 ## Estructura del Proyecto
 
@@ -28,8 +28,8 @@ El proyecto tiene la siguiente estructura:
 
 * `Token.java`: Define la clase `Token` para representar un token.
 * `Lexer.java`: Implementa el analizador léxico.
-* `ASTNode.java`: Define la clase abstracta `ASTNode` para los nodos del AST.
-* `Program.java`, `BinaryOperation.java`, `Number.java`, `StringLiteral.java`, `Identifier.java`, `Assignment.java`, `Print.java`, `IfStatement.java`, `WhileStatement.java`, `Comparison.java`: Definen las clases para los diferentes tipos de nodos del AST.
+
+* `Program.java`, `BinaryOperation.java`, `Number.java`, `StringLiteral.java`, `Identifier.java`, `Assignment.java`, `Print.java`, `IfStatement.java`, `WhileStatement.java`, `Comparison.java`: Definen las clases para los diferentes tipos de nodos.
 * `Parser.java`: Implementa el analizador sintáctico.
 * `SemanticError.java`: Define la clase `SemanticError` para representar errores semánticos.
 * `SemanticAnalyzer.java`: Implementa el analizador semántico.
@@ -47,15 +47,15 @@ El proyecto tiene la siguiente estructura:
         javac *.java
         ```
 3.  **Ejecución:**
-    * Una vez que la compilación sea exitosa, ejecuta el compilador con el siguiente comando, reemplazando `archivo.minilang` con el nombre de tu archivo de código MiniLang:
+    * Una vez que la compilación sea exitosa, ejecuta el compilador con el siguiente comando, reemplazando `archivo.MAEVJP` con el nombre de tu archivo de código MAEVJP:
         ```bash
-        java Main archivo.minilang
+        java Main archivo.MAEVJP
         ```
 
-### Ejemplo de código MiniLang
+### Ejemplo de código MAEVJP
 
-```minilang
-// Este es un programa de prueba para MiniLang
+```maevjp
+// Este es un programa de prueba para MAEVJP
 // Declaración de variables
 x = 10;
 y = 5;
