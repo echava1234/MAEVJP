@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
         // Comprueba que se reciba un archivo fuente como argumento
         if (args.length != 1) {
-            System.out.println("Uso: java Main archivo.minilang");
+            System.out.println("Uso: java Main archivo.MAEVJP");
             return;
         }
 
